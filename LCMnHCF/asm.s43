@@ -1,0 +1,59 @@
+#include "msp430.h" ; #define controlled include file
+org 0x3010
+dw 0x3, 0x6
+NAME main ; module name
+PUBLIC main ; make the main label visible outside this module
+ORG 0FFFEh
+DC16 init ; set reset vector to 'init' label
+RSEG CSTACK ; pre-declaration of segment
+RSEG CODE ; place program in 'CODE' segment
+init: MOV #SFE(CSTACK), SP ; set up stack
+main: NOP ; main program
+MOV.W #WDTPW+WDTHOLD,&WDTCTL ; Stop watchdog timer
+clr r5
+mov 0x3010(r5),r7
+;mov #0x3010, r5
+;mov @R5, r7
+MOV R7,R13
+inc r5
+inc r5
+mov 0x3010(r5),r8
+;mov @R5, r8
+MOV R8,R14
+cmp r7,r8
+jc back
+mov r7,r8
+mov @r5,r7
+
+
+back: call #div
+tst r8
+jz final
+mov r7,r10
+mov r8,r7
+mov r10, r8
+jmp back
+final: call #mult
+
+MOV R14,R8
+call #div
+JMP $
+
+
+div: clr r6
+L2: SUB R7,R8
+ADD #0001h,R6
+CMP R7,R8
+JLO L1 
+JMP L2
+L1: RET
+
+mult: MOV R13,R12
+     MOV R14,R11
+BACK1: DEC R13
+JZ END1
+ADD R11,R14
+JMP BACK1
+END1: RET
+
+END
