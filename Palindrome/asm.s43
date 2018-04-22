@@ -1,0 +1,58 @@
+#include "msp430.h"                     ; #define controlled include file
+
+        NAME    main                    ; module name
+
+        PUBLIC  main                    ; make the main label vissible
+                                        ; outside this module
+        ORG     0FFFEh
+        DC16    init                    ; set reset vector to 'init' label
+        RSEG DATA16_N
+       
+        SourceStr: 
+        DB "racecar" 
+        DestStr: DS 40h
+        RSEG    CSTACK                
+        RSEG    CODE                  
+
+init:   MOV     #SFE(CSTACK), SP      
+
+main:   NOP                           
+        MOV.W   #WDTPW+WDTHOLD,&WDTCTL
+        mov.w #SourceStr ,R14      
+        mov.w R14,R10
+        mov.w #DestStr ,R12         
+        mov.w R12,R9
+        sub R10,R9
+        decd r9
+        mov r9,r4
+        inc r4
+        add R9,R12
+        call #revMyStrCpy             
+       clr r7
+        mov #DestStr,r5
+        mov.w #SourceStr ,R6
+        pal1: cmp.b 0(r5),0(r6)
+              jnz over
+              inc r5
+              inc r6
+              dec r4
+              jnz pal1
+              mov.b #11h,r13
+              jmp fin
+        over: mov.b #00,r13
+       
+        fin:
+        clr r4
+        mov r13,0x3010(r4)
+        jmp $       
+       
+        revMyStrCpy:
+          jmp CopyTest
+          CopyLoop:
+          dec.w R12 
+          CopyTest:
+          mov.b @R14+,0(R12) 
+          tst.b 0(R14) 
+          jnz CopyLoop 
+          ret 
+        END

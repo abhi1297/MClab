@@ -1,0 +1,43 @@
+#include "msp430.h"                     ; #define controlled include file
+
+
+       
+        NAME    main                    ; module name
+
+        PUBLIC  main                    ; make the main label vissible
+                                ; outside this module
+        
+        ORG     0FFFEh
+        DC16    init                    ; set reset vector to 'init' label
+        
+        RSEG DATA16_N
+    
+        SourceStr: ; Source string
+        DB "hello , world\n" ;            
+        DestStr: DS 40h
+       
+        RSEG    CODE                   
+
+init: NOP                             ; main program
+       MOV.W   #WDTPW+WDTHOLD,&WDTCTL  ; Stop watchdog timer 
+      
+        main:                     
+        mov.w #SourceStr ,R14     
+        mov.w R14,R10
+        mov.w #DestStr ,R12         
+        mov.w R12,R9
+        sub R10,R9
+        add R9,R12
+        call #revMyStrCpy             
+        jmp $                     
+        
+        revMyStrCpy:
+          jmp CopyTest
+          CopyLoop:
+          dec.w R12 
+          CopyTest:
+          mov.b @R14+,0(R12)
+          tst.b 0(R14)
+          jnz CopyLoop 
+          ret
+          End
